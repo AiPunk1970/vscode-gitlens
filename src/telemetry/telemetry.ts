@@ -43,7 +43,7 @@ interface QueuedEvent<T extends keyof TelemetryEvents = keyof TelemetryEvents> {
 export class TelemetryService implements Disposable {
 	private _enabled: boolean = false;
 	get enabled(): boolean {
-		return this._enabled;
+		return false;
 	}
 
 	private provider: TelemetryProvider | undefined;
@@ -69,68 +69,20 @@ export class TelemetryService implements Disposable {
 
 	private _initializationTimer: ReturnType<typeof setTimeout> | undefined;
 	private ensureTelemetry(container: Container): void {
-		this._enabled = env.isTelemetryEnabled && configuration.get('telemetry.enabled', undefined, true);
-		if (!this._enabled) {
-			if (this._initializationTimer != null) {
-				clearTimeout(this._initializationTimer);
-				this._initializationTimer = undefined;
-			}
-
-			this.eventQueue.length = 0;
-
-			this.provider?.dispose();
-			this.provider = undefined;
-
-			return;
-		}
-
-		if (this._initializationTimer != null) return;
-		this._initializationTimer = setTimeout(() => this.initializeTelemetry(container), 7500);
-	}
-
-	private async initializeTelemetry(container: Container) {
+		this._enabled = false;
 		if (this._initializationTimer != null) {
 			clearTimeout(this._initializationTimer);
 			this._initializationTimer = undefined;
 		}
 
-		this.provider = new (
-			await import(/* webpackChunkName: "telemetry" */ './openTelemetryProvider.js')
-		).OpenTelemetryProvider(
-			{
-				env: container.env,
-				extensionId: container.id,
-				extensionMode: getExtensionModeLabel(container.extensionMode),
-				extensionVersion: container.version,
-				machineId: env.machineId,
-				sessionId: env.sessionId,
-				language: env.language,
-				platform: getPlatform(),
-				vscodeEdition: env.appName,
-				vscodeHost: env.appHost,
-				vscodeRemoteName: env.remoteName ?? '',
-				vscodeShell: env.shell,
-				vscodeUIKind: String(env.uiKind),
-				vscodeVersion: codeVersion,
-			},
-			getProxyAgent(),
-			container.debugging,
-		);
+		this.eventQueue.length = 0;
 
-		if (this.eventQueue.length) {
-			const queue = [...this.eventQueue];
-			this.eventQueue.length = 0;
+		this.provider?.dispose();
+		this.provider = undefined;
+	}
 
-			for (const { type, name, data, global } of queue) {
-				if (type === 'sendEvent') {
-					this.provider.setGlobalAttributes(global);
-					assertsTelemetryEventData(data);
-					this.provider.sendEvent(name, stripNullOrUndefinedAttributes(data));
-				}
-			}
-		}
-
-		this.provider.setGlobalAttributes(this.globalAttributes);
+	private async initializeTelemetry(container: Container) {
+		// Telemetry disabled
 	}
 
 	sendEvent<T extends keyof TelemetryEvents>(
@@ -139,25 +91,7 @@ export class TelemetryService implements Disposable {
 			? [data?: never, source?: Source, startTime?: TimeInput, endTime?: TimeInput]
 			: [data: TelemetryEvents[T], source?: Source, startTime?: TimeInput, endTime?: TimeInput]
 	): void {
-		if (!this._enabled) return;
-
-		const [d, source, startTime, endTime] = args;
-		assertsTelemetryEventData(d);
-		const data = addSourceAttributes(source, d);
-
-		if (this.provider == null) {
-			this.eventQueue.push({
-				type: 'sendEvent',
-				name: name,
-				data: data,
-				global: new Map(this.globalAttributes),
-				startTime: startTime ?? Date.now(),
-				endTime: endTime ?? Date.now(),
-			});
-			return;
-		}
-
-		this.provider.sendEvent(name, stripNullOrUndefinedAttributes(data), startTime, endTime);
+		// Telemetry disabled
 	}
 
 	startEvent<T extends keyof TelemetryEvents>(
@@ -166,31 +100,7 @@ export class TelemetryService implements Disposable {
 			? [data?: never, source?: Source, startTime?: TimeInput]
 			: [data: TelemetryEvents[T], source?: Source, startTime?: TimeInput]
 	): Disposable | undefined {
-		if (!this._enabled) return undefined;
-
-		let [d, source, startTime] = args;
-		assertsTelemetryEventData(d);
-		const data = addSourceAttributes(source, d);
-
-		startTime = startTime ?? Date.now();
-
-		if (this.provider != null) {
-			const span = this.provider.startEvent(name, stripNullOrUndefinedAttributes(data), startTime);
-			return {
-				dispose: () => span?.end(),
-			};
-		}
-
-		return {
-			dispose: () =>
-				(this.sendEvent as (name: string, data: unknown, ...rest: unknown[]) => void)(
-					name,
-					d,
-					source,
-					startTime,
-					Date.now() as TimeInput,
-				),
-		};
+		return undefined;
 	}
 
 	// sendErrorEvent(

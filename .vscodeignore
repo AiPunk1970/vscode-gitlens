@@ -1,5 +1,6 @@
 .devcontainer/**
 .github/**
+.pnpm-store/**
 .vscode/**
 .vscode-clean/**
 .vscode-test/**

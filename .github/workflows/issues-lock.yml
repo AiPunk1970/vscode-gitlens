@@ -1,9 +1,9 @@
 name: 'Lock closed issues'
 
 on:
-    schedule:
-        - cron: '30 5 * * *'
     workflow_dispatch:
+    # schedule:
+    #     - cron: '30 5 * * *'
 
 jobs:
     stale:

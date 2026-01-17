@@ -196,7 +196,7 @@ function getExtensionConfig(target, mode, env) {
 	 */
 	const plugins = [
 		new DefinePlugin({
-			DEBUG: mode === 'development',
+			DEBUG: true,
 			'process.env.NODE_ENV': JSON.stringify(mode === 'production' ? 'production' : 'development'),
 		}),
 	];
@@ -529,7 +529,7 @@ function getWebviewConfig(webviews, overrides, mode, env) {
 	/** @type WebpackConfig['plugins'] | any */
 	const plugins = [
 		new DefinePlugin({
-			DEBUG: mode === 'development',
+			DEBUG: true,
 			'process.env.NODE_ENV': JSON.stringify(mode === 'production' ? 'production' : 'development'),
 		}),
 		new WebpackRequireFromPlugin({

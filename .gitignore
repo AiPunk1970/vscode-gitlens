@@ -15,3 +15,6 @@ product.json
 tsconfig*.tsbuildinfo
 *.code-workspace
 localdev*.instructions.md
+.pnpm-store
+artifact
+act_local_build.sh

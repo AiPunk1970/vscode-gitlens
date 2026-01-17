@@ -1,8 +1,9 @@
 name: Label Completed Issues
 
 on:
-    issues:
-        types: [closed]
+    workflow_dispatch:
+    # issues:
+    #     types: [closed]
 
 jobs:
     label-closed-issues:

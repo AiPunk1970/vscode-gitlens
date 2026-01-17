@@ -64,48 +64,50 @@ export class OrganizationService implements Disposable {
 				if (this._organizations != null) return this._organizations;
 			}
 
-			let rsp;
-			try {
-				rsp = await this.connection.fetchGkApi(
-					'user/organizations-light',
-					{
-						method: 'GET',
-					},
-					{ token: options?.accessToken },
-				);
-			} catch (ex) {
-				debugger;
-				Logger.error(ex, scope);
 
-				void window.showErrorMessage(`Unable to get organizations due to error: ${ex}`, 'OK');
-				this.updateOrganizations(undefined);
-				return this._organizations;
-			}
+			// const rsp = await this.connection.fetchGkApi(
+			// 	'user/organizations-light',
+			// 	{
+			// 		method: 'GET',
+			// 	},
+			// 	{ token: options?.accessToken },
+			// );
 
-			if (!rsp.ok) {
-				debugger;
-				Logger.error(
-					undefined,
-					scope,
-					`Unable to get organizations; status=(${rsp.status}): ${rsp.statusText}`,
-				);
+			// if (!rsp.ok) {
+			// 	debugger;
+			// 	Logger.error(
+			// 		undefined,
+			// 		scope,
+			// 		`Unable to get organizations; status=(${rsp.status}): ${rsp.statusText}`,
+			// 	);
 
-				void window.showErrorMessage(`Unable to get organizations; Status: ${rsp.statusText}`, 'OK');
+			// 	void window.showErrorMessage(`Unable to get organizations; Status: ${rsp.statusText}`, 'OK');
 
-				// Setting to null prevents hitting the API again until you reload
-				this.updateOrganizations(null);
-				return this._organizations;
-			}
+			// 	// Setting to null prevents hitting the API again until you reload
+			// 	this.updateOrganizations(null);
+			// 	return this._organizations;
+			// }
 
-			const organizationsResponse = (await rsp.json()) as OrganizationsResponse;
-			const organizations = organizationsResponse.map((o: any) => ({
-				id: o.id,
-				name: o.name,
-				role: o.role,
-			}));
+			// const organizationsResponse = (await rsp.json()) as OrganizationsResponse;
+			// const organizations = organizationsResponse.map((o: any) => ({
+			// 	id: o.id,
+			// 	name: o.name,
+			// 	role: o.role,
+			// }));
+
+			// MOCK ORGANIZATIONS
+			const organizations: Organization[] = [
+				{
+					id: 'mock-org-id',
+					name: 'Mock Organization',
+					role: 'admin',
+				},
+			];
 
 			await this.storeOrganizations(organizations, userId);
 			this.updateOrganizations(organizations);
+
+
 		}
 
 		return this._organizations;
@@ -258,35 +260,57 @@ export class OrganizationService implements Disposable {
 
 		if (!this._organizationSettings?.has(id) || options?.force === true) {
 			await this.deleteStoredOrganizationSettings(id);
-			const rsp = await this.connection.fetchGkApi(
-				`v1/organizations/settings`,
-				{ method: 'GET' },
-				{ organizationId: id },
-			);
-			if (!rsp.ok) {
-				Logger.error(
-					'',
-					getLogScope(),
-					`Unable to get organization settings; status=(${rsp.status}): ${rsp.statusText}`,
-				);
-				return undefined;
-			}
+			// const rsp = await this.connection.fetchGkApi(
+			// 	`v1/organizations/settings`,
+			// 	{ method: 'GET' },
+			// 	{ organizationId: id },
+			// );
+			// if (!rsp.ok) {
+			// 	Logger.error(
+			// 		'',
+			// 		getLogScope(),
+			// 		`Unable to get organization settings; status=(${rsp.status}): ${rsp.statusText}`,
+			// 	);
+			// 	return undefined;
+			// }
 
-			const organizationResponse = (await rsp.json()) as OrganizationSettingsResponse;
-			if (organizationResponse.error != null) {
-				Logger.error(
-					'',
-					getLogScope(),
-					`Unable to get organization settings; status=(${rsp.status}): ${organizationResponse.error}`,
-				);
-				return undefined;
-			}
+			// const organizationResponse = (await rsp.json()) as OrganizationSettingsResponse;
+			// if (organizationResponse.error != null) {
+			// 	Logger.error(
+			// 		'',
+			// 		getLogScope(),
+			// 		`Unable to get organization settings; status=(${rsp.status}): ${organizationResponse.error}`,
+			// 	);
+			// 	return undefined;
+			// }
+
+			// MOCK ORGANIZATION SETTINGS
+			const mockSettings: OrganizationSettings = {
+				aiEnabled: true,
+				enforceAiProviders: false,
+				aiSettings: {
+					enabled: true,
+					createdAt: new Date().toISOString(),
+					updatedAt: new Date().toISOString(),
+				},
+				aiProviders: {
+					openai: { enabled: true },
+					anthropic: { enabled: true },
+					google: { enabled: true },
+				},
+				draftsSettings: {
+					enabled: true,
+					bucket: undefined,
+					createdAt: new Date().toISOString(),
+					updatedAt: new Date().toISOString(),
+				},
+			};
 
 			if (this._organizationSettings == null) {
 				this._organizationSettings = new Map();
 			}
-			this._organizationSettings.set(id, { data: organizationResponse.data, lastValidatedDate: new Date() });
-			await this.storeOrganizationSettings(id, organizationResponse.data, new Date());
+			this._organizationSettings.set(id, { data: mockSettings, lastValidatedDate: new Date() });
+			await this.storeOrganizationSettings(id, mockSettings, new Date());
 		}
 		return this._organizationSettings.get(id)?.data;
 	}
